@@ -33,6 +33,7 @@ func CheckSpam(c *gin.Context) {
 
 	cacheLock.Lock()
 	if cachedResult, ok := cache.Load(req.Number); ok {
+		cacheLock.Unlock()
 		c.JSON(200, gin.H{
 			"msg":    "Phone number found in blocklist (cached result)",
 			"status": "SUCCESS",
@@ -40,7 +41,7 @@ func CheckSpam(c *gin.Context) {
 		})
 		return
 	}
-	cacheLock.Unlock()
+	
 
 	// Get the database connection
 	db := mongodb.GetCollection("blocklist")
