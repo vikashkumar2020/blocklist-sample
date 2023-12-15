@@ -27,7 +27,7 @@ func main() {
 	// Initialise the connection to the database
 	conn := mongodb.GetInstance(databaseConfig)
 	utils.LogInfo("database connection initialised")
-	
+
 	defer conn.Disconnect(nil)
 
 	router := gin.Default()

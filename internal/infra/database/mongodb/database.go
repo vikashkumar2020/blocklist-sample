@@ -12,6 +12,7 @@ import (
 )
 
 var instanace *mongo.Client
+var db *mongo.Database
 
 // GetInstance return copy of db session
 func GetInstance(c *config.DatabaseConfig) *mongo.Client {
@@ -19,12 +20,16 @@ func GetInstance(c *config.DatabaseConfig) *mongo.Client {
 	if instanace == nil {
 		var err error
 		instanace, err = Connect(c)
+		db = instanace.Database(c.Dbname)
 		if err != nil {
 			panic(err)
 		}
 	}
 	return instanace
+}
 
+func GetCollection(collection string) *mongo.Collection {
+	return db.Collection(collection)
 }
 
 
