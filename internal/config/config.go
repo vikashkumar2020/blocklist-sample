@@ -13,11 +13,27 @@ type ServerConfig struct {
 	BasePath          string
 }
 
+type DatabaseConfig struct {
+	Host     string
+	User     string
+	Password string
+	Dbname   string
+}
+
 func NewServerConfig() *ServerConfig {
 	return &ServerConfig{
 		Port:              os.Getenv("PORT"),
 		ServerApiPrefixV1: os.Getenv("SERVER_API_PREFIX_V1"),
 		BasePath:          os.Getenv("SERVER_BASE_PATH"),
+	}
+}
+
+func NewDatabaseConfig() *DatabaseConfig {
+	return &DatabaseConfig{
+		Host:     os.Getenv("DB_HOST"),
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Dbname:   os.Getenv("DB_NAME"),
 	}
 }
 
