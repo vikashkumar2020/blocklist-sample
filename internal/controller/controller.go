@@ -4,10 +4,16 @@ import (
 	"blocklist/internal/infra/database/mongodb"
 	model "blocklist/internal/model/entity"
 	"blocklist/internal/model/types"
+	"context"
+	"sync"
+
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var cache sync.Map
+var cacheLock sync.Mutex
 
 func CheckSpam(c *gin.Context) {
 	// Request body
@@ -23,6 +29,19 @@ func CheckSpam(c *gin.Context) {
 		return
 	}
 
+	// Check if the number is in the cache
+
+	cacheLock.Lock()
+	if cachedResult, ok := cache.Load(req.Number); ok {
+		c.JSON(200, gin.H{
+			"msg":    "Phone number found in blocklist (cached result)",
+			"status": "SUCCESS",
+			"result": cachedResult,
+		})
+		return
+	}
+	cacheLock.Unlock()
+
 	// Get the database connection
 	db := mongodb.GetCollection("blocklist")
 
@@ -30,14 +49,14 @@ func CheckSpam(c *gin.Context) {
 	var number model.PhoneNumber
 	filter := bson.M{"number": req.Number}
 
-	err := db.FindOne(c.Request.Context(), filter).Decode(&number)
+	err := db.FindOne(context.Background(), filter).Decode(&number)
 	var result types.CheckSpamResponse
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			// Phone number not found in the blocklist
 			result.Number = req.Number
 			result.Spam = false
-
+			cache.Store(req.Number, result)
 			c.JSON(404, gin.H{
 				"msg":    "Phone number not found in blocklist",
 				"status": "SUCCESS",
@@ -56,7 +75,7 @@ func CheckSpam(c *gin.Context) {
 
 	result.Number = number.Number
 	result.Spam = true
-
+	cache.Store(req.Number, result)
 	c.JSON(200, gin.H{
 		"msg":    "Phone number found in blocklist",
 		"status": "SUCCESS",
