@@ -41,7 +41,7 @@ func CheckSpam(c *gin.Context) {
 		})
 		return
 	}
-	
+	cacheLock.Unlock()
 
 	// Get the database connection
 	db := mongodb.GetCollection("blocklist")
